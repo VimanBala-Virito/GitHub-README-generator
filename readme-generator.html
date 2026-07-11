@@ -525,27 +525,36 @@
   // ---------- state ----------
   let skills = ["Python", "JavaScript", "Git"];
 
+  // Simple Icons slugs (what shields.io's `logo=` badge parameter actually expects)
   const skillIconMap = {
-    "python":"python","javascript":"javascript","typescript":"typescript","java":"java",
+    "python":"python","javascript":"javascript","typescript":"typescript","java":"openjdk",
     "c++":"cplusplus","c":"c","c#":"csharp","go":"go","golang":"go","rust":"rust","ruby":"ruby",
     "php":"php","swift":"swift","kotlin":"kotlin","dart":"dart","html":"html5","css":"css3",
-    "react":"react","vue":"vuejs","angular":"angularjs","svelte":"svelte","node":"nodejs",
-    "nodejs":"nodejs","express":"express","django":"django","flask":"flask","fastapi":"fastapi",
-    "spring":"spring","docker":"docker","kubernetes":"kubernetes","aws":"amazonwebservices",
-    "azure":"azure","gcp":"googlecloud","git":"git","github":"github","gitlab":"gitlab",
-    "linux":"linux","bash":"bash","postgresql":"postgresql","mysql":"mysql","mongodb":"mongodb",
+    "react":"react","vue":"vuedotjs","angular":"angular","svelte":"svelte","node":"nodedotjs",
+    "nodejs":"nodedotjs","express":"express","django":"django","flask":"flask","fastapi":"fastapi",
+    "spring":"spring","docker":"docker","kubernetes":"kubernetes","aws":"amazonaws",
+    "azure":"microsoftazure","gcp":"googlecloud","git":"git","github":"github","gitlab":"gitlab",
+    "linux":"linux","bash":"gnubash","postgresql":"postgresql","mysql":"mysql","mongodb":"mongodb",
     "redis":"redis","graphql":"graphql","tailwind":"tailwindcss","tailwindcss":"tailwindcss",
-    "nextjs":"nextjs","next.js":"nextjs","figma":"figma","sqlite":"sqlite","r":"r",
+    "nextjs":"nextdotjs","next.js":"nextdotjs","figma":"figma","sqlite":"sqlite",
     "tensorflow":"tensorflow","pytorch":"pytorch","unity":"unity","unreal":"unrealengine",
     "flutter":"flutter","firebase":"firebase","nginx":"nginx","jenkins":"jenkins",
     "terraform":"terraform","scala":"scala","haskell":"haskell","elixir":"elixir",
-    "solidity":"solidity","matlab":"matlab"
+    "solidity":"solidity","matlab":"matlab","vscode":"visualstudiocode","numpy":"numpy",
+    "pandas":"pandas","webpack":"webpack","vite":"vite","jest":"jest","npm":"npm","yarn":"yarn"
   };
 
   function iconFor(skill){
     const key = skill.toLowerCase().trim();
     return skillIconMap[key] || null;
   }
+
+  // theme names differ slightly per service — map our 6 picker options to what each widget actually accepts
+  const THEME_MAP = {
+    stats:  { radical:'radical', dark:'dark', tokyonight:'tokyonight', dracula:'dracula', synthwave:'synthwave', gruvbox:'gruvbox' },
+    streak: { radical:'radical', dark:'dark', tokyonight:'tokyonight', dracula:'dracula', synthwave:'synthwave', gruvbox:'gruvbox' },
+    trophy: { radical:'radical', dark:'onedark', tokyonight:'tokyonight', dracula:'dracula', synthwave:'gruvbox', gruvbox:'gruvbox' }
+  };
 
   let selectedTheme = "radical";
 
@@ -666,11 +675,13 @@
     }
 
     // ---- badges row: profile views / followers ----
+    // NOTE: raw <img> tags are used (not markdown ![]() syntax) because GitHub does not
+    // parse markdown image syntax when it's nested inside a block-level HTML tag like <p>.
     let badgeLine = [];
     if(els.w_visitors.checked){
-      badgeLine.push(`![Profile views](https://komarev.com/ghpvc/?username=${username}&color=4dff9f&style=flat-square&label=views)`);
+      badgeLine.push(`<img src="https://komarev.com/ghpvc/?username=${username}&color=4dff9f&style=flat-square&label=views" alt="Profile views" />`);
     }
-    badgeLine.push(`![GitHub followers](https://img.shields.io/github/followers/${username}?label=Follow&style=social)`);
+    badgeLine.push(`<img src="https://img.shields.io/github/followers/${username}?label=Follow&style=social" alt="GitHub followers" />`);
     if(badgeLine.length){
       md += `<p align="center">\n${badgeLine.map(b=>"  "+b).join("\n")}\n</p>\n\n`;
     }
@@ -694,7 +705,9 @@
       md += `### 🛠️ Tech Stack\n\n`;
       const badges = skills.map(s => {
         const label = slug(s).replace(/-/g,'--').replace(/_/g,'__');
-        return `![${s}](https://img.shields.io/badge/${encodeURIComponent(label)}-4dff9f?style=for-the-badge&logo=${encodeURIComponent(s.toLowerCase().replace(/\s+/g,''))}&logoColor=0b100d)`;
+        const iconSlug = iconFor(s);
+        const logoParam = iconSlug ? `&logo=${encodeURIComponent(iconSlug)}` : '';
+        return `<img src="https://img.shields.io/badge/${encodeURIComponent(label)}-4dff9f?style=for-the-badge${logoParam}&logoColor=0b100d" alt="${escapeHtml(s)}" />`;
       });
       md += `<p align="left">\n${badges.map(b=>"  "+b).join("\n")}\n</p>\n\n`;
     }
@@ -704,20 +717,25 @@
     // ---- github stats widgets ----
     let widgetBlocks = [];
     if(els.w_stats.checked){
-      widgetBlocks.push(`![${name}'s GitHub stats](https://github-readme-stats.vercel.app/api?username=${username}&show_icons=true&theme=${selectedTheme}&hide_border=true&count_private=true)`);
+      const t = THEME_MAP.stats[selectedTheme] || 'radical';
+      widgetBlocks.push(`<img src="https://github-readme-stats.vercel.app/api?username=${username}&show_icons=true&theme=${t}&hide_border=true&count_private=true" alt="${escapeHtml(name)}'s GitHub stats" width="48%"/>`);
     }
     if(els.w_streak.checked){
-      widgetBlocks.push(`![GitHub Streak](https://github-readme-streak-stats.herokuapp.com/?user=${username}&theme=${selectedTheme}&hide_border=true)`);
+      const t = THEME_MAP.streak[selectedTheme] || 'radical';
+      // streak-stats.demolab.com is the current live endpoint — the old *.herokuapp.com domain was retired.
+      widgetBlocks.push(`<img src="https://streak-stats.demolab.com/?user=${username}&theme=${t}&hide_border=true" alt="GitHub Streak" width="48%"/>`);
     }
     if(els.w_toplangs.checked){
-      widgetBlocks.push(`![Top Langs](https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&layout=compact&theme=${selectedTheme}&hide_border=true)`);
+      const t = THEME_MAP.stats[selectedTheme] || 'radical';
+      widgetBlocks.push(`<img src="https://github-readme-stats.vercel.app/api/top-langs/?username=${username}&layout=compact&theme=${t}&hide_border=true" alt="Top Languages" width="48%"/>`);
     }
     if(widgetBlocks.length){
-      md += `### 📊 GitHub Stats\n\n<p align="center">\n${widgetBlocks.map(w=>`  <img src="${w.match(/\((.*?)\)/)[1]}" width="48%"/>`).join("\n")}\n</p>\n\n`;
+      md += `### 📊 GitHub Stats\n\n<p align="center">\n${widgetBlocks.map(w=>"  "+w).join("\n")}\n</p>\n\n`;
     }
 
     if(els.w_trophy.checked){
-      md += `### 🏆 Trophies\n\n<p align="center">\n  <img src="https://github-profile-trophy.vercel.app/?username=${username}&theme=${selectedTheme==='radical'?'radical':selectedTheme}&no-frame=true&row=1&column=7" />\n</p>\n\n`;
+      const t = THEME_MAP.trophy[selectedTheme] || 'radical';
+      md += `### 🏆 Trophies\n\n<p align="center">\n  <img src="https://github-profile-trophy.vercel.app/?username=${username}&theme=${t}&no-frame=true&row=1&column=7" alt="GitHub trophies" />\n</p>\n\n`;
     }
 
     if(els.w_snake.checked){
@@ -729,17 +747,23 @@
     }
 
     // ---- socials ----
+    // Raw <a><img></a> pairs, not markdown [![]()](), for the same nested-HTML parsing reason as above.
+    function socialBadge(href, label, color, logo, logoColor){
+      logoColor = logoColor || 'white';
+      const img = `<img src="https://img.shields.io/badge/${encodeURIComponent(label)}-${color}?style=for-the-badge&logo=${logo}&logoColor=${logoColor}" alt="${escapeHtml(label)}" />`;
+      return `<a href="${href}" target="_blank">${img}</a>`;
+    }
     let socialBadges = [];
-    if(els.s_linkedin.value.trim()) socialBadges.push(`[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/${els.s_linkedin.value.trim()})`);
-    if(els.s_twitter.value.trim()) socialBadges.push(`[![Twitter](https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white)](https://twitter.com/${els.s_twitter.value.trim()})`);
-    if(els.s_devto.value.trim()) socialBadges.push(`[![Dev.to](https://img.shields.io/badge/dev.to-0A0A0A?style=for-the-badge&logo=devdotto&logoColor=white)](https://dev.to/${els.s_devto.value.trim()})`);
-    if(els.s_medium.value.trim()) socialBadges.push(`[![Medium](https://img.shields.io/badge/Medium-12100E?style=for-the-badge&logo=medium&logoColor=white)](https://medium.com/@${els.s_medium.value.trim()})`);
+    if(els.s_linkedin.value.trim()) socialBadges.push(socialBadge(`https://linkedin.com/in/${els.s_linkedin.value.trim()}`, 'LinkedIn', '0077B5', 'linkedin'));
+    if(els.s_twitter.value.trim()) socialBadges.push(socialBadge(`https://twitter.com/${els.s_twitter.value.trim()}`, 'Twitter', '1DA1F2', 'twitter'));
+    if(els.s_devto.value.trim()) socialBadges.push(socialBadge(`https://dev.to/${els.s_devto.value.trim()}`, 'dev.to', '0A0A0A', 'devdotto'));
+    if(els.s_medium.value.trim()) socialBadges.push(socialBadge(`https://medium.com/@${els.s_medium.value.trim()}`, 'Medium', '12100E', 'medium'));
     if(els.s_site.value.trim()){
       const site = els.s_site.value.trim();
       const href = site.startsWith('http') ? site : 'https://'+site;
-      socialBadges.push(`[![Website](https://img.shields.io/badge/Website-4dff9f?style=for-the-badge&logo=todoist&logoColor=0b100d)](${href})`);
+      socialBadges.push(socialBadge(href, 'Website', '4dff9f', 'todoist', '0b100d'));
     }
-    if(els.s_email.value.trim()) socialBadges.push(`[![Email](https://img.shields.io/badge/Email-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:${els.s_email.value.trim()})`);
+    if(els.s_email.value.trim()) socialBadges.push(socialBadge(`mailto:${els.s_email.value.trim()}`, 'Email', 'D14836', 'gmail'));
 
     if(socialBadges.length){
       md += `### 🔗 Connect\n\n<p align="left">\n${socialBadges.map(b=>"  "+b).join("\n")}\n</p>\n\n`;
