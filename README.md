@@ -45,8 +45,9 @@ The app is a single HTML file:
 
 ## Project structure
 
-```
-readme-generator.html   # everything: markup, styles, and logic in one file
+```README.md
+   index.html   
+   vercel.json   
 ```
 
 ## Notes
